@@ -1,0 +1,7 @@
+.vs
+.vscode
+out
+build
+build-dbg
+build-rel
+.DS_Store
