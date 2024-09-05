@@ -26,7 +26,7 @@ Follow these steps to build the project:
    cmake --build build -j
    ```
 
-This will create a `build` directory and compile all necessary artifacts there. The main executable will be located in `bin/` directory.
+This will create a `build` directory and compile all necessary artifacts there. The main executable will be located in `build/bt-ui`.
 
 # Release
 
@@ -45,7 +45,7 @@ If you only wanted to test there is no need to build the whole UI.
 cmake -S. -Bbuild -DTEST_ONLY=True
 cmake --build build -j
 
-./bin/Debug/bt_test
+./build/tests/Debug/bt_test
 ```
 
 ## License
