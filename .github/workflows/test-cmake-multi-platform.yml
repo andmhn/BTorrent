@@ -69,8 +69,12 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Test
+    - name:  Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ls && ./tests/bt_test
+      run:   |
+             if [ "$RUNNER_OS" == "Windows" ]; then
+                  ./tests/${{ matrix.build_type }}/bt_test
+             else
+                  ./tests/bt_test
+             fi
+      shell: bash
