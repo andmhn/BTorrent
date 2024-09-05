@@ -13,7 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${FullOutputDir}")
 add_subdirectory(bt-core)
 
 # Building UI is resource hungry so we skip it while testing
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Test")
+if(NOT TEST_ONLY)
     add_subdirectory(bt-ui)
 endif()
 

@@ -62,7 +62,8 @@
             "displayName": "Test",
             "inherits": "x86-debug",
             "cacheVariables": {
-              "CMAKE_BUILD_TYPE": "Test"
+              "CMAKE_BUILD_TYPE": "Debug",
+              "TEST_ONLY": true
             }
         }
     ]

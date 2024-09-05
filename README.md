@@ -1,6 +1,6 @@
 ## Author
 
-👋 Hi, I'm Mohan!
+👋 Hi, I'm Anand Mohan!
 
 ## System Requirements
 
@@ -26,7 +26,7 @@ Follow these steps to build the project:
    cmake --build build -j
    ```
 
-This will create a `build` directory and compile all necessary artifacts there. The main executable will be located in `build/`.
+This will create a `build` directory and compile all necessary artifacts there. The main executable will be located in `bin/` directory.
 
 # Release
 
@@ -37,27 +37,15 @@ cmake -S. -Bbuild
 cmake --build build -j --config Release
 ```
 
-Artifacts for both configurations will be generated in the `build` directory.
-
-On Mac or Linux you'll need to maintain two build trees:
-
-```bash
-cmake -S. -Bbuild/Debug -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/Debug -j
-
-cmake -S. -Bbuild/Release -DCMAKE_BUILD_TYPE=Release
-cmake --build build/Release -j
-```
-
-# Testing just the core
+# Test Only
 
 If you only wanted to test there is no need to build the whole UI.
 
 ```
-cmake -S. -Bbuild/Test -DCMAKE_BUILD_TYPE=Test
-cmake --build build/Test -j
+cmake -S. -Bbuild -DTEST_ONLY=True
+cmake --build build -j
 
-./bin/Test/bt_test
+./bin/Debug/bt_test
 ```
 
 ## License
