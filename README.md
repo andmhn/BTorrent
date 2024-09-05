@@ -42,10 +42,22 @@ Artifacts for both configurations will be generated in the `build` directory.
 On Mac or Linux you'll need to maintain two build trees:
 
 ```bash
-cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Debug
-cmake --build build -j
-cmake -S. -Bbuild-rel -DCMAKE_BUILD_TYPE=Release
-cmake --build build-rel -j
+cmake -S. -Bbuild/Debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/Debug -j
+
+cmake -S. -Bbuild/Release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/Release -j
+```
+
+# Testing just the core
+
+If you only wanted to test there is no need to build the whole UI.
+
+```
+cmake -S. -Bbuild/Test -DCMAKE_BUILD_TYPE=Test
+cmake --build build/Test -j
+
+./bin/Test/bt_test
 ```
 
 ## License

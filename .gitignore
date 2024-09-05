@@ -5,4 +5,5 @@ bin
 build
 build-dbg
 build-rel
+build-test
 .DS_Store

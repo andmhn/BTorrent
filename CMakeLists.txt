@@ -11,5 +11,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${FullOutputDir}/static_libs")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${FullOutputDir}")
 
 add_subdirectory(bt-core)
-add_subdirectory(bt-ui)
+
+# Building UI is resource hungry so we skip it while testing
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Test")
+    add_subdirectory(bt-ui)
+endif()
+
 add_subdirectory(tests)
