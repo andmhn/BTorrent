@@ -7,6 +7,10 @@
 
 namespace bt {
 
+class InvalidTorrentFile : public std::exception {
+  const char* what() const throw() { return "[Error]: Invalid Torrent File\n"; }
+};
+
 /**
  * @brief represents a single file from files list
  */
@@ -38,9 +42,10 @@ class TorrentFile {
 class TorrentMetadata {
  public:
   TorrentMetadata(long long creationDate, long long pieceLength,
-                  long long piecesCount, std::string name, std::string comment,
-                  std::string createdBy, std::string infoHash,
-                  std::string piecesHashes, std::string mainAnnounce,
+                  long long piecesCount, std::string name, std::string infoHash,
+                  std::string piecesHashes, std::optional<std::string> comment,
+                  std::optional<std::string> createdBy,
+                  std::optional<std::string> mainAnnounce,
                   std::vector<std::string> announceList,
                   std::vector<TorrentFile> files);
 
@@ -102,15 +107,15 @@ class TorrentMetadata {
   std::vector<TorrentFile> files();
 
  private:
-  long long _creationDate;  // nullable
-  long long _pieceLength;
+  long long _creationDate;  // nullable null ? -1
+  long long _pieceLength;   // required
   long long _piecesCount;
-  std::string _name;
-  std::string _comment;    // nullable
-  std::string _createdBy;  // nullable
+  std::string _name;  // required
   std::string _infoHash;
-  std::string _piecesHashes;
-  std::string _mainAnnounce;
+  std::string _piecesHashes;                 // required
+  std::optional<std::string> _comment;       // nullable
+  std::optional<std::string> _createdBy;     // nullable
+  std::optional<std::string> _mainAnnounce;  // nullable
   std::vector<std::string> _announceList;
   std::vector<TorrentFile> _files;
 };

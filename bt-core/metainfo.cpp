@@ -25,9 +25,10 @@ std::string TorrentFile::GetRelativePathAsString() {
 
 TorrentMetadata::TorrentMetadata(long long creationDate, long long pieceLength,
                                  long long piecesCount, std::string name,
-                                 std::string comment, std::string createdBy,
                                  std::string infoHash, std::string piecesHashes,
-                                 std::string mainAnnounce,
+                                 std::optional<std::string> comment,
+                                 std::optional<std::string> createdBy,
+                                 std::optional<std::string> mainAnnounce,
                                  std::vector<std::string> announceList,
                                  std::vector<TorrentFile> files)
     : _creationDate(creationDate),
@@ -55,29 +56,16 @@ long long TorrentMetadata::piecesCount() const { return _piecesCount; }
 
 std::string TorrentMetadata::name() { return _name; }
 
-std::optional<std::string> TorrentMetadata::comment() {
-  if (_comment.length() > 0) {
-    return _comment;
-  }
-  return {};
-}
+std::optional<std::string> TorrentMetadata::comment() { return _comment; }
 
-std::optional<std::string> TorrentMetadata::createdBy() {
-  if (_createdBy.length() > 0) {
-    return _createdBy;
-  }
-  return {};
-}
+std::optional<std::string> TorrentMetadata::createdBy() { return _createdBy; }
 
 std::string TorrentMetadata::infoHash() { return _infoHash; }
 
 std::string TorrentMetadata::piecesHashes() { return _piecesHashes; }
 
 std::optional<std::string> TorrentMetadata::mainAnnounce() {
-  if (_mainAnnounce.length() > 0) {
-    return _mainAnnounce;
-  }
-  return {};
+  return _mainAnnounce;
 }
 
 std::vector<std::string> TorrentMetadata::announceList() {
@@ -94,18 +82,19 @@ std::vector<TorrentFile> TorrentMetadata::files() { return _files; }
 namespace torrent_parser {
 
 template <typename T>
-T _GetDictValue(bencode::data dict, std::string key);
+std::optional<T> _GetDictValue(bencode::data dict, std::string key);
 
 static std::vector<std::string> _GetAnnounceList(bencode::data metaData);
 
 static std::vector<TorrentFile> _ParseFiles(bencode::dict infoDict);
 
 TorrentMetadata ParseFromFile(std::string path) {
+  // load file to string and call Parse function
+
   std::ifstream torrentFile{path, std::ios::binary | std::ios::ate};
   if (!torrentFile.is_open()) {
     throw std::runtime_error("Could not open file\n");
   }
-
   torrentFile.seekg(0);
   std::string metaInfo((std::istreambuf_iterator<char>(torrentFile)),
                        (std::istreambuf_iterator<char>()));
@@ -113,30 +102,54 @@ TorrentMetadata ParseFromFile(std::string path) {
 }
 
 TorrentMetadata Parse(std::string metaInfo) {
+  // prepare 'variables' needed for constructing a TorrentMetadata object
+  // also throw InvalidTorrentFile exception if necessary data are not present
+
   bencode::data metaData = bencode::decode(metaInfo);
-  bencode::dict infoDict =
-      std::get<bencode::dict>(std::get<bencode::dict>(metaData)["info"]);
+  bencode::dict infoDict;
+  try {
+    infoDict =
+        std::get<bencode::dict>(std::get<bencode::dict>(metaData)["info"]);
+  } catch (std::bad_variant_access) {
+    throw InvalidTorrentFile();
+  }
+
+  std::string piecesHashes;
+  long long pieceLength;
+  std::string name;
+  try {
+    piecesHashes = _GetDictValue<std::string>(infoDict, "pieces").value();
+    pieceLength =
+        _GetDictValue<bencode::integer>(infoDict, "piece length").value();
+    name = _GetDictValue<std::string>(infoDict, "name").value();
+  } catch (std::bad_optional_access) {
+    throw InvalidTorrentFile();
+  }
+
+  long long creationDate =
+      _GetDictValue<bencode::integer>(metaData, "creation date").value_or(-1);
+
+  long long piecesCount = piecesHashes.length() / 20;
+
   std::string infoString =
       bencode::encode(std::get<bencode::dict>(metaData)["info"]);
   std::string infoHash = GetSha1Hash(infoString);
 
-  long long creationDate =
-      _GetDictValue<bencode::integer>(metaData, "creation date");
-  std::string comment = _GetDictValue<std::string>(metaData, "comment");
-  std::string createdBy = _GetDictValue<std::string>(metaData, "created by");
-  std::string mainAnnounce = _GetDictValue<std::string>(metaData, "announce");
+  std::optional<std::string> comment =
+      _GetDictValue<std::string>(metaData, "comment");
+
+  std::optional<std::string> createdBy =
+      _GetDictValue<std::string>(metaData, "created by");
+
+  std::optional<std::string> mainAnnounce =
+      _GetDictValue<std::string>(metaData, "announce");
+
   std::vector<std::string> announceList = _GetAnnounceList(metaData);
 
-  std::string name = _GetDictValue<std::string>(infoDict, "name");
-  std::string piecesHashes = _GetDictValue<std::string>(infoDict, "pieces");
   std::vector<TorrentFile> files = _ParseFiles(infoDict);
 
-  long long pieceLength =
-      _GetDictValue<bencode::integer>(infoDict, "piece length");
-  long long piecesCount = piecesHashes.length() / 20;
-
-  return TorrentMetadata(creationDate, pieceLength, piecesCount, name, comment,
-                         createdBy, infoHash, piecesHashes, mainAnnounce,
+  return TorrentMetadata(creationDate, pieceLength, piecesCount, name, infoHash,
+                         piecesHashes, comment, createdBy, mainAnnounce,
                          announceList, files);
 }
 
@@ -145,20 +158,19 @@ std::string GetSha1Hash(std::string text) {
   return sha1(text);
 }
 
-// TODO: make it return std::optional
 /**
  * @brief It wraps std::get and catches std::bad_variant_access error
  * @brief Useful for skipping 'bad_variant_access' exception
  * @tparam T any bencode::basic_data type
  */
 template <typename T>
-T _GetDictValue(bencode::data dict, std::string key) {
+std::optional<T> _GetDictValue(bencode::data dict, std::string key) {
   try {
     return std::get<T>(dict[key]);
   } catch (std::bad_variant_access &e) {
     std::cerr << "[Info]: " << e.what() << " for key: " + key << "\n";
   }
-  return T();
+  return {};
 }
 
 /**
@@ -166,10 +178,15 @@ T _GetDictValue(bencode::data dict, std::string key) {
  * @return  announce-list from the top of torrent metaData dict
  */
 static std::vector<std::string> _GetAnnounceList(bencode::data metaData) {
-  std::vector<std::string> announceList;
-  std::vector list = _GetDictValue<bencode::list>(metaData, "announce-list");
+  std::optional<bencode::list> announceListOptional =
+      _GetDictValue<bencode::list>(metaData, "announce-list");
 
-  for (bencode::data items : list) {
+  if (!announceListOptional.has_value()) {
+    return {};
+  }
+
+  std::vector<std::string> announceList;
+  for (bencode::data items : announceListOptional.value()) {
     for (bencode::data item : std::get<bencode::list>(items)) {
       announceList.emplace_back(std::get<bencode::string>(item));
     }
@@ -179,39 +196,47 @@ static std::vector<std::string> _GetAnnounceList(bencode::data metaData) {
 
 /**
  * @param infoDict is a dict from torrent metadata
- * @return list of files from info-dict
+ * @return list of multiple files from info-dict
+ * @return list of single file if there is no 'files' key in info-dict
  */
 static std::vector<TorrentFile> _ParseFiles(bencode::dict infoDict) {
   bencode::list filesList;
-  std::vector<TorrentFile> torrentFilesBuilder;
-  bool containsManyFiles = true;
 
-  try {
-    filesList = std::get<bencode::list>(infoDict["files"]);
-  } catch (std::bad_variant_access) {
-    std::cerr << "[Info]: torrent contains a single file\n";
-    containsManyFiles = false;
-  }
+  try {  // catches std::bad_optional_access
 
-  if (!containsManyFiles) {
-    long long length = _GetDictValue<bencode::integer>(infoDict, "length");
-    std::string fileName = _GetDictValue<std::string>(infoDict, "name");
+    // check for single file torrent
+    try {
+      filesList = std::get<bencode::list>(infoDict["files"]);
+    } catch (std::bad_variant_access) {
+      long long length =
+          _GetDictValue<bencode::integer>(infoDict, "length").value();
+      std::string fileName =
+          _GetDictValue<std::string>(infoDict, "name").value();
 
-    torrentFilesBuilder.emplace_back(TorrentFile({fileName}, length));
-  }
-
-  for (bencode::data file : filesList) {
-    long long len = _GetDictValue<bencode::integer>(file, "length");
-    std::vector<bencode::data> pathListData =
-        _GetDictValue<bencode::list>(file, "path");
-
-    std::vector<std::string> pathListBuilder;
-    for (bencode::data p : pathListData) {
-      pathListBuilder.emplace_back(std::get<bencode::string>(p));
+      // return single file list from top of infoHash
+      return {TorrentFile({fileName}, length)};
     }
-    torrentFilesBuilder.emplace_back(TorrentFile({pathListBuilder}, len));
+
+    // build TorrentFile list
+    std::vector<TorrentFile> torrentFilesBuilder;
+
+    for (bencode::data file : filesList) {
+      long long len = _GetDictValue<bencode::integer>(file, "length").value();
+      std::vector<bencode::data> pathListData =
+          _GetDictValue<bencode::list>(file, "path").value();
+
+      std::vector<std::string> pathListBuilder;
+      for (bencode::data p : pathListData) {
+        pathListBuilder.emplace_back(std::get<bencode::string>(p));
+      }
+      torrentFilesBuilder.emplace_back(TorrentFile({pathListBuilder}, len));
+    }
+
+    return torrentFilesBuilder;
+
+  } catch (std::bad_optional_access) {
+    throw InvalidTorrentFile();
   }
-  return torrentFilesBuilder;
 }
 
 }  // namespace torrent_parser
