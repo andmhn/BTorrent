@@ -105,13 +105,20 @@ TorrentMetadata Parse(std::string metaInfo) {
   // prepare 'variables' needed for constructing a TorrentMetadata object
   // also throw InvalidTorrentFile exception if necessary data are not present
 
-  bencode::data metaData = bencode::decode(metaInfo);
+  bencode::data metaData;
+  try {
+    metaData = bencode::decode(metaInfo);
+  } catch (const bencode::decode_error &e) {
+    std::string msg = "decode error: ";
+    throw InvalidTorrentFile(msg + e.what());
+  }
+
   bencode::dict infoDict;
   try {
     infoDict =
         std::get<bencode::dict>(std::get<bencode::dict>(metaData)["info"]);
   } catch (std::bad_variant_access) {
-    throw InvalidTorrentFile();
+    throw InvalidTorrentFile("info key not present");
   }
 
   std::string piecesHashes;
@@ -123,7 +130,7 @@ TorrentMetadata Parse(std::string metaInfo) {
         _GetDictValue<bencode::integer>(infoDict, "piece length").value();
     name = _GetDictValue<std::string>(infoDict, "name").value();
   } catch (std::bad_optional_access) {
-    throw InvalidTorrentFile();
+    throw InvalidTorrentFile("required keys not present");
   }
 
   long long creationDate =
@@ -198,6 +205,7 @@ static std::vector<std::string> _GetAnnounceList(bencode::data metaData) {
  * @param infoDict is a dict from torrent metadata
  * @return list of multiple files from info-dict
  * @return list of single file if there is no 'files' key in info-dict
+ * @throws InvalidTorrentFile
  */
 static std::vector<TorrentFile> _ParseFiles(bencode::dict infoDict) {
   bencode::list filesList;
@@ -235,7 +243,7 @@ static std::vector<TorrentFile> _ParseFiles(bencode::dict infoDict) {
     return torrentFilesBuilder;
 
   } catch (std::bad_optional_access) {
-    throw InvalidTorrentFile();
+    throw InvalidTorrentFile("required keys not present in files list");
   }
 }
 

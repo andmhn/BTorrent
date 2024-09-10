@@ -1,6 +1,5 @@
 #pragma once
 
-#include <list>
 #include <optional>
 #include <string>
 #include <vector>
@@ -8,7 +7,14 @@
 namespace bt {
 
 class InvalidTorrentFile : public std::exception {
-  const char* what() const throw() { return "[Error]: Invalid Torrent File\n"; }
+ public:
+  InvalidTorrentFile(std::string desc) { _err += " (" + desc + ")"; }
+  InvalidTorrentFile() {}
+
+  const char* what() const throw() { return _err.c_str(); }
+
+ private:
+  std::string _err = "[Error]: Invalid Torrent File";
 };
 
 /**
@@ -129,6 +135,7 @@ namespace torrent_parser {
  * @brief loads torrent metadata from .torrent file
  * @param path for .torrent file
  * @return parsed torrent metadata
+ * @throws std::runtime_error if file could not be opened
  */
 TorrentMetadata ParseFromFile(std::string path);
 
@@ -136,6 +143,7 @@ TorrentMetadata ParseFromFile(std::string path);
  * @brief loads torrent metadata from bencoded metaInfo
  * @param metaInfo is bencoded string loaded from .torrent file
  * @return parsed torrent metadata
+ * @throws bt::InvalidTorrentFile if metaInfo has missing required fields
  */
 TorrentMetadata Parse(std::string metaInfo);
 
