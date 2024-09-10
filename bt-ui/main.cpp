@@ -1,7 +1,5 @@
 #include <wx/wx.h>
 
-#include "lib.hpp"
-
 const std::string APP_NAME = "Bittorrent Client";
 
 class BtGui : public wxApp {
@@ -47,7 +45,7 @@ MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, APP_NAME) {
   SetMenuBar(menuBar);
 
   CreateStatusBar();
-  SetStatusText(lib::greet(APP_NAME + "!"));
+  SetStatusText("Welcome to " + APP_NAME + "!");
 
   Bind(wxEVT_MENU, &MainFrame::OnHello, this, ID_Hello);
   Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);

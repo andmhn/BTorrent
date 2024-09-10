@@ -1,6 +1,5 @@
 set(TEST_SRCS
-	lib_test.cpp 
-)
+ "metainfo_test.cpp")
 
 include_directories(../bt-core)
 
