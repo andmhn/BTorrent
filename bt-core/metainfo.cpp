@@ -175,7 +175,7 @@ std::optional<T> _GetDictValue(bencode::data dict, std::string key) {
   try {
     return std::get<T>(dict[key]);
   } catch (std::bad_variant_access &e) {
-    std::cerr << "[Info]: " << e.what() << " for key: " + key << "\n";
+    std::cerr << "[Info]: torrent file does not contain: " + key << "\n";
   }
   return {};
 }
