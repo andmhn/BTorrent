@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cctype>
 #include <charconv>
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <limits>
