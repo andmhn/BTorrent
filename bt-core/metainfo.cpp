@@ -15,9 +15,12 @@ std::string TorrentFile::GetRelativePathAsString() {
   std::string pathNameBuider = "";
   char delem = '/';
 
-  for (size_t i = 0; i < relativePath.size() - 1; i++) {
+  size_t foldersCount = relativePath.size() - 1;
+
+  for (size_t i = 0; i < foldersCount; i++) {
     pathNameBuider.append(relativePath[i] + delem);
   }
+  // append last element without delimeter
   pathNameBuider.append(relativePath.back());
 
   return pathNameBuider;
@@ -44,10 +47,7 @@ TorrentMetadata::TorrentMetadata(long long creationDate, long long pieceLength,
       _files(files) {}
 
 std::optional<long long> TorrentMetadata::creationDate() const {
-  if (_creationDate != 0) {
-    return _creationDate;
-  }
-  return {};
+  return _creationDate;
 }
 
 long long TorrentMetadata::pieceLength() const { return _pieceLength; }
