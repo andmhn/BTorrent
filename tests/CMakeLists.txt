@@ -1,5 +1,5 @@
 set(TEST_SRCS
- "metainfo_test.cpp"
+ "torrent_metadata_test.cpp"
 )
 
 include_directories(../bt-core)
