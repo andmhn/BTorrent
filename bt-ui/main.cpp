@@ -1,64 +1,108 @@
-#include <wx/wx.h>
+#ifdef NO_CONSOLE
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
 
-const std::string APP_NAME = "Bittorrent Client";
+#include <stdio.h>
 
-class BtGui : public wxApp {
- public:
-  bool OnInit() override;
-};
+#include "GLFW/glfw3.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
-wxIMPLEMENT_APP(BtGui);
+// expose our window
+GLFWwindow* window = nullptr;
 
-class MainFrame : public wxFrame {
- public:
-  MainFrame();
+// pointer to segoeui font from memory
+extern const char* segoeui_font_compressed_data_base85;
 
- private:
-  void OnHello(wxCommandEvent& event);
-  void OnExit(wxCommandEvent& event);
-  void OnAbout(wxCommandEvent& event);
-};
+void HandleShortcuts(int mods, int key);
+void DrawMainGui();
 
-enum { ID_Hello = 1 };
-
-bool BtGui::OnInit() {
-  MainFrame* frame = new MainFrame();
-  frame->SetMinSize(wxSize(600, 400));
-  frame->Show(true);
-  return true;
+static void glfw_error_callback(int error, const char* description) {
+  fprintf(stderr, "[Error]: GLFW Error %d: %s\n", error, description);
 }
 
-MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, APP_NAME) {
-  wxMenu* menuFile = new wxMenu;
-  menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-                   "Help string shown in status bar for this menu item");
-  menuFile->AppendSeparator();
-  menuFile->Append(wxID_EXIT);
-
-  wxMenu* menuHelp = new wxMenu;
-  menuHelp->Append(wxID_ABOUT);
-
-  wxMenuBar* menuBar = new wxMenuBar;
-  menuBar->Append(menuFile, "&File");
-  menuBar->Append(menuHelp, "&Help");
-
-  SetMenuBar(menuBar);
-
-  CreateStatusBar();
-  SetStatusText("Welcome to " + APP_NAME + "!");
-
-  Bind(wxEVT_MENU, &MainFrame::OnHello, this, ID_Hello);
-  Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
-  Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action,
+                 int mods) {
+  HandleShortcuts(mods, key);
 }
 
-void MainFrame::OnExit(wxCommandEvent& event) { Close(true); }
+int main(int, char**) {
+  glfwSetErrorCallback(glfw_error_callback);
+  if (!glfwInit()) return 1;
 
-void MainFrame::OnAbout(wxCommandEvent& event) {
-  wxMessageBox("This is a wxWidgets Hello World example", "About " + APP_NAME,
-               wxOK | wxICON_INFORMATION);
-}
+  // GL 3.0 + GLSL 130
+  const char* glsl_version = "#version 130";
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-void MainFrame::OnHello(wxCommandEvent& event) {
-  wxLogMessage("Hello world from wxWidgets!");
+  // Create window with graphics context
+  window =
+      glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
+  if (window == nullptr) return 1;
+  glfwMakeContextCurrent(window);
+  glfwSetKeyCallback(window, keyCallback);
+  glfwSwapInterval(1);  // Enable vsync
+
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  (void)io;
+  // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  // Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+  io.IniFilename = NULL;  // disable saving state of windows
+
+  // Setup Dear ImGui style
+  ImGui::StyleColorsLight();
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
+
+  // set segooui font from memory
+  ImFontConfig fcon;
+  fcon.FontDataOwnedByAtlas = false;
+  io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+      segoeui_font_compressed_data_base85, 25, &fcon, 0);
+
+  while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+      ImGui_ImplGlfw_Sleep(10);
+      continue;
+    }
+
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Draw our main gui :)
+    DrawMainGui();
+
+    // Rendering
+    ImGui::Render();
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    glClearColor(0, 0, 0, 0xFF);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(window);
+  }
+
+  // Cleanup
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
+  glfwDestroyWindow(window);
+  glfwTerminate();
+
+  return 0;
 }
