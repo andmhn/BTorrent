@@ -4,7 +4,20 @@
 
 #include "doctest.h"
 
-TEST_CASE("with single file torrent") {
+std::string EncodeWithPercent(std::string str) {
+  std::string percentEncodedString;
+  size_t i = 0;
+  for (auto c : str) {
+    if ((i % 2) == 0) {
+      percentEncodedString.push_back('%');
+    }
+    percentEncodedString.push_back(std::toupper(c));
+    i++;
+  }
+  return percentEncodedString;
+}
+
+TEST_CASE("testing parser with single file torrent") {
   std::string filePath =
       TORRENT_FILES_PATH "linuxmint-22-xfce-64bit.iso.torrent";
 
@@ -18,7 +31,7 @@ TEST_CASE("with single file torrent") {
   CHECK(torr.mainAnnounce().has_value());
 }
 
-TEST_CASE("with multiple file torrent") {
+TEST_CASE("testing parser with multiple file torrent") {
   std::string filePath = TORRENT_FILES_PATH "india-pocket-map_archive.torrent";
 
   std::cout << "\nloading torrent with multiple file\n";
@@ -28,38 +41,23 @@ TEST_CASE("with multiple file torrent") {
   CHECK(torr.comment().has_value());
   CHECK(torr.announceList().size() > 0);
   CHECK(torr.mainAnnounce().has_value());
-}
 
 
-std::string EncodeWithPercent(std::string str) {
-  std::string percentEncodedString;
-  size_t i = 0;
-  for (auto c : str) {
-    if ((i % 2) == 0) {
-      percentEncodedString.push_back('%');
-    }
-    percentEncodedString.push_back(std::toupper(c));
-    i++;
+  SUBCASE("download torrent") {
+    // build http request url that can be used to get peers
+    puts("\nyour tcp url :");
+    std::cout << torr.mainAnnounce().value()
+              << "?info_hash=" << EncodeWithPercent(torr.infoHash())
+              << "&left=" << torr.pieceLength()
+              << "&peer_id=-PC0001-706887310628&uploaded=0&downloaded=0&port="
+                 "6889&compact=1\n";
+
+    // TODO : implement http handshake with tracker
   }
-  return percentEncodedString;
-}
-TEST_CASE("download torrent") {
-  std::string filePath = TORRENT_FILES_PATH "india-pocket-map_archive.torrent ";
-
-  std::cout << "\nDownloading torrent with single file\n";
-  bt::TorrentMetadata torr = bt::torrent_parser::ParseFromFile(filePath);
-
-  // build http request url that can be used to get peers
-  puts("\nyour tcp url :");
-  std::cout << torr.mainAnnounce().value() 
-            << "?info_hash=" << EncodeWithPercent(torr.infoHash())
-            << "&left=" << torr.pieceLength()
-            << "&peer_id=-PC0001-706887310628&uploaded=0&downloaded=0&port=6889&compact=1\n";
-
-  // TODO : implement http handshake with tracker
 }
 
 int DaytimeClient(const char*);
+
 TEST_CASE("TEST NETWORKING") {
   puts("\ntesting boost asio");
   puts("pinging to timeServerHost:  time-a-g.nist.gov");
