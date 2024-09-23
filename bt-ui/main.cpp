@@ -12,8 +12,10 @@
 // expose our window
 GLFWwindow* window = nullptr;
 
-// pointer to segoeui font from memory
-extern const char* segoeui_font_compressed_data_base85;
+// pointer to opensans font from memory
+extern const char* opensans_regular_font_compressed_data_base85;
+const char* mainFont = opensans_regular_font_compressed_data_base85;
+const float fontSize = 25;
 
 void HandleShortcuts(int mods, int key);
 void DrawMainGui();
@@ -37,8 +39,7 @@ int main(int, char**) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
   // Create window with graphics context
-  window =
-      glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
+  window = glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
   if (window == nullptr) return 1;
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
@@ -63,11 +64,10 @@ int main(int, char**) {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
 
-  // set segooui font from memory
+  // set our main font from memory
   ImFontConfig fcon;
   fcon.FontDataOwnedByAtlas = false;
-  io.Fonts->AddFontFromMemoryCompressedBase85TTF(
-      segoeui_font_compressed_data_base85, 25, &fcon, 0);
+  io.Fonts->AddFontFromMemoryCompressedBase85TTF(mainFont, fontSize, &fcon, 0);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();

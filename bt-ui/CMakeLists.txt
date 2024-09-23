@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SRCS 
 "main.cpp"
 "bt-ui.cpp"
-"segoeui_font.cpp")
+"opensans_font.cpp")
 
 add_executable(${EXECUTABLE} ${SRCS})
 target_include_directories(${EXECUTABLE} PRIVATE "../bt-core")

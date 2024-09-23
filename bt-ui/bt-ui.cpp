@@ -116,6 +116,7 @@ static void _SelectTorrentFile() {
   nfdopendialogu8args_t args = {0};
   args.filterList = filters;
   args.filterCount = 1;
+  // attach it to our root glfw window
   NFD_GetNativeWindowFromGLFWWindow(window, &args.parentWindow);
 
   nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
