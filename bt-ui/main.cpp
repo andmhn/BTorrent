@@ -21,88 +21,89 @@ void HandleShortcuts(int mods, int key);
 void DrawMainGui();
 
 static void glfw_error_callback(int error, const char* description) {
-  fprintf(stderr, "[Error]: GLFW Error %d: %s\n", error, description);
+    fprintf(stderr, "[Error]: GLFW Error %d: %s\n", error, description);
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action,
-                 int mods) {
-  HandleShortcuts(mods, key);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    HandleShortcuts(mods, key);
 }
 
 int main(int, char**) {
-  glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit()) return 1;
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit())
+        return 1;
 
-  // GL 3.0 + GLSL 130
-  const char* glsl_version = "#version 130";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  // Create window with graphics context
-  window = glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
-  if (window == nullptr) return 1;
-  glfwMakeContextCurrent(window);
-  glfwSetKeyCallback(window, keyCallback);
-  glfwSwapInterval(1);  // Enable vsync
+    // Create window with graphics context
+    window = glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
+    if (window == nullptr)
+        return 1;
+    glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSwapInterval(1); // Enable vsync
 
-  // Setup Dear ImGui context
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  (void)io;
-  // Enable Keyboard Controls
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  // Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-  io.IniFilename = NULL;  // disable saving state of windows
+    io.IniFilename = NULL; // disable saving state of windows
 
-  // Setup Dear ImGui style
-  ImGui::StyleColorsLight();
+    // Setup Dear ImGui style
+    ImGui::StyleColorsLight();
 
-  // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init(glsl_version);
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
-  // set our main font from memory
-  ImFontConfig fcon;
-  fcon.FontDataOwnedByAtlas = false;
-  io.Fonts->AddFontFromMemoryCompressedBase85TTF(mainFont, fontSize, &fcon, 0);
+    // set our main font from memory
+    ImFontConfig fcon;
+    fcon.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryCompressedBase85TTF(mainFont, fontSize, &fcon, 0);
 
-  while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
-    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
-      ImGui_ImplGlfw_Sleep(10);
-      continue;
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+            ImGui_ImplGlfw_Sleep(10);
+            continue;
+        }
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Draw our main gui :)
+        DrawMainGui();
+
+        // Rendering
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0, 0, 0, 0xFF);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
     }
 
-    // Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
-    // Draw our main gui :)
-    DrawMainGui();
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
-    // Rendering
-    ImGui::Render();
-    int display_w, display_h;
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(0, 0, 0, 0xFF);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    glfwSwapBuffers(window);
-  }
-
-  // Cleanup
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
-
-  glfwDestroyWindow(window);
-  glfwTerminate();
-
-  return 0;
+    return 0;
 }

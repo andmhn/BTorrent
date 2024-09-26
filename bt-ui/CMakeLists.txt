@@ -54,7 +54,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
   add_compile_definitions("GLFW_EXPOSE_NATIVE_WIN32")
-  
+
   # disables terminal in release mode
   if(NO_CONSOLE)
     add_compile_definitions("NO_CONSOLE")
