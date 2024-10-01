@@ -1,36 +1,68 @@
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+
+set(EXECUTABLE ${CMAKE_PROJECT_NAME})
+project(${EXECUTABLE} LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(SRCS 
-    main.cpp
-)
+"main.cpp"
+"bt-ui.cpp"
+"opensans_font.cpp")
 
-set(BINARY bt_client)
+add_executable(${EXECUTABLE} ${SRCS})
+target_include_directories(${EXECUTABLE} PRIVATE "../bt-core")
 
-include_directories(../bt-core)
+# GLFW
+#====================================================
+set(GLFW_DIR ${PROJECT_SOURCE_DIR}/external/glfw-3.4)
 
-set(wxBUILD_SHARED OFF)
-set(WX_VERSION 3.2.5)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(${GLFW_DIR})
+target_include_directories(${EXECUTABLE} PRIVATE "${GLFW_DIR}/include")
 
-message(STATUS "Fetching wxWidgets v${WX_VERSION}..............")
+# ImGUI
+#====================================================
+set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/external/imgui-1.91.1)
 
-include(FetchContent)
-FetchContent_Declare(
-    wxWidgets
-    DOWNLOAD_EXTRACT_TIMESTAMP OFF
-    URL "https://github.com/wxWidgets/wxWidgets/releases/download/v${WX_VERSION}/wxWidgets-${WX_VERSION}.tar.bz2"
-)
-set(FETCHCONTENT_QUIET NO)
-FetchContent_MakeAvailable(wxWidgets)
+add_library("imgui" "${IMGUI_DIR}/imgui.cpp"
+#                    "${IMGUI_DIR}/imgui_demo.cpp"
+                    "${IMGUI_DIR}/imgui_draw.cpp"
+                    "${IMGUI_DIR}/imgui_tables.cpp"
+                    "${IMGUI_DIR}/imgui_widgets.cpp"          
+                    "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
+                    "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp")				  
+target_include_directories("imgui" PRIVATE "${IMGUI_DIR}" "${GLFW_DIR}/include")
+target_include_directories(${EXECUTABLE} PRIVATE "${IMGUI_DIR}")
+target_include_directories(${EXECUTABLE} PRIVATE "${IMGUI_DIR}/backends")
 
-if(APPLE)
-    # create bundle on apple compiles
-    add_executable(${BINARY} MACOSX_BUNDLE ${SRCS})
+# NFD   nativefiledialog-extended
+#=====================================================
+set(NFD_DIR ${PROJECT_SOURCE_DIR}/external/nativefiledialog-extended-1.2.1)
+add_subdirectory(${NFD_DIR})
+target_include_directories(${EXECUTABLE} PRIVATE "${NFD_DIR}/src/include")
 
-    # Set a custom plist file for the app bundle - needed for Mac OS Retina display
-    set_target_properties(${BINARY} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
-else()
-    # the WIN32 is needed for Windows in order for it to look for WinMain
-    # instead of the main function. This is ignored on other systems,
-    # so it works on all platforms
-    add_executable(${BINARY} WIN32 ${SRCS} main.exe.manifest)
+
+# Platform specific
+#=====================================================
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  # enables hot reloading for debug
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+  add_compile_definitions("GLFW_EXPOSE_NATIVE_WIN32")
+
+  # disables terminal in release mode
+  if(NO_CONSOLE)
+    add_compile_definitions("NO_CONSOLE")
+  endif()
+  target_link_libraries(${EXECUTABLE} glfw imgui opengl32 gdi32 shell32 nfd bt-core)
+
+else() # assume using linux
+  add_compile_definitions("GLFW_EXPOSE_NATIVE_X11")
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(${EXECUTABLE} glfw imgui OpenGL nfd bt-core)
 endif()
-
-target_link_libraries(${BINARY} PRIVATE wxcore wxnet bt-core)
