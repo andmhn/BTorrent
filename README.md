@@ -14,17 +14,12 @@ To get started with this project, ensure you have the following tools and librar
 
 # Debug
 
-Follow these steps to build the project:
+Build as a normal cmake project
 
-1. **Create a build directory & configure the build:**
-   ```bash
-   cmake -S. -Bbuild
-   ```
-
-2. **Build the project:**
-   ```bash
-   cmake --build build -j
-   ```
+```
+cmake -S. -Bbuild
+cmake --build build -j
+```
 
 This will create a `build` directory and compile all necessary artifacts there.
 The executables will be located in `build/bin`.
@@ -33,7 +28,7 @@ The executables will be located in `build/bin`.
 
 For release build use `--config Release` on Windows:
 
-```bash
+```
 cmake -S. -Bbuild
 cmake --build build -j --config Release
 ```

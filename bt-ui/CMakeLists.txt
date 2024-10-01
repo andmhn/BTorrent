@@ -49,8 +49,8 @@ target_include_directories(${EXECUTABLE} PRIVATE "${NFD_DIR}/src/include")
 # Platform specific
 #=====================================================
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  # enables hot reloading
-  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
+  # enables hot reloading for debug
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
   add_compile_definitions("GLFW_EXPOSE_NATIVE_WIN32")

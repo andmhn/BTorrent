@@ -15,7 +15,7 @@ GLFWwindow* window = nullptr;
 // pointer to opensans font from memory
 extern const char* opensans_regular_font_compressed_data_base85;
 const char* mainFont = opensans_regular_font_compressed_data_base85;
-const float fontSize = 25;
+const float fontSize = 22;  // DO NOT CHANGE
 
 void HandleShortcuts(int mods, int key);
 void DrawMainGui();
@@ -40,6 +40,7 @@ int main(int, char**) {
 
     // Create window with graphics context
     window = glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
+    glfwSetWindowSizeLimits(window, 800, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);

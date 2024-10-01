@@ -1,5 +1,6 @@
 #include <thread>
 #include <vector>
+#include <iostream>
 
 #include "GLFW/glfw3.h"
 #include "imgui.h"
@@ -17,30 +18,110 @@ static struct State {
 
 static void SelectTorrentFile();
 
-// TEST: spawning popup window
-static void DrawTorrentPreview() {
-    ImGui::OpenPopup("Torrent Info?");
+constexpr size_t allignedStart = 150;
+constexpr ImVec2 popupSize(800, 500);
+
+// wrap comment to scrollable
+static void _DisplayComments() {
+    bt::TorrentMetadata& torr = state.selectedTorrent.value();
+    ImGui::Text("comment");
+    ImGui::SameLine(allignedStart);
+
+    // calculate possible lines
+    size_t lines = torr.comment().value_or("").size() / 80;
+
+    // if line greater than 3 enable scrolling
+    if (lines > 3) {
+        ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, 80),
+                          ImGuiChildFlags_None, 0);
+        ImGui::TextWrapped(torr.comment().value_or("").c_str());
+        ImGui::EndChild();
+    } else {
+        ImGui::TextWrapped(torr.comment().value_or("").c_str());
+    }
+}
+
+static void _DisplayFiles() {
+    bt::TorrentMetadata& torr = state.selectedTorrent.value();
+    ImGui::Text("files");
+    ImGui::SameLine(allignedStart);
+
+    static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                                   ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV;
+    // scroll after 8 line
+    ImVec2 outer_size = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing() * 8);
+
+    // 2 column table with filename and size
+    if (ImGui::BeginTable("filesTable", 2, flags, outer_size)) {
+        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+        ImGui::TableSetupColumn("File Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableHeadersRow();
+
+        // use clipper to only draw what is visible
+        ImGuiListClipper clipper;
+
+        clipper.Begin(static_cast<int>(torr.files().size()));
+        while (clipper.Step()) {
+            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
+                ImGui::TableNextRow();
+
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextWrapped(torr.files()[row].GetRelativePathAsString().c_str());
+
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%.3f MB", torr.files()[row].size / float(1024 * 1024));
+            }
+        }
+        ImGui::EndTable();
+    }
+}
+
+// spawning popup window
+// TODO: resize to content
+static void _DrawTorrentPreview() {
+    bt::TorrentMetadata& torr = state.selectedTorrent.value();
+
+    ImGui::OpenPopup(torr.name().c_str());
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(popupSize);
 
-    if (ImGui::BeginPopupModal("Torrent Info?", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        bt::TorrentMetadata& torr = state.selectedTorrent.value();
-        ImGui::Text("name: %s", torr.name().c_str());
-        ImGui::Separator();
-        ImGui::TextWrapped("Comment: %s", torr.comment().value_or("").c_str());
-        ImGui::Separator();
-        ImGui::Text("createdBy: %s", torr.createdBy().value_or("").c_str());
-        ImGui::Separator();
-        ImGui::Text("mainAnnounce: %s", torr.mainAnnounce().value_or("").c_str());
-        ImGui::Separator();
-        ImGui::Text("infoHash: %s", torr.infoHash().c_str());
-        ImGui::Separator();
+    if (ImGui::BeginPopupModal(torr.name().c_str(), NULL, ImGuiWindowFlags_NoResize)) {
+        {
+            ImGui::Text("size");
+            ImGui::SameLine(allignedStart);
+            ImGui::Text("%d MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
+            ImGui::Separator();
 
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::Text("infoHash");
+            ImGui::SameLine(allignedStart);
+            ImGui::Text(torr.infoHash().c_str());
+            ImGui::Separator();
+
+            // TODO: convert to readable date
+            ImGui::Text("date");
+            ImGui::SameLine(allignedStart);
+            ImGui::Text("%d", torr.creationDate().value_or(0));
+            ImGui::Separator();
+
+            ImGui::Text("created by");
+            ImGui::SameLine(allignedStart);
+            ImGui::Text(torr.createdBy().value_or("").c_str());
+            ImGui::Separator();
+
+            _DisplayComments();
+            ImGui::Separator();
+
+            _DisplayFiles();
+        }
+        ImGui::SetCursorPosY(popupSize.y - (2 * ImGui::GetStyle().IndentSpacing));
+        if (ImGui::Button("Start", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
             state.selectedTorrent = {};
         }
         ImGui::SetItemDefaultFocus();
+
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
@@ -89,7 +170,7 @@ void DrawMainGui() {
         SelectTorrentFile();
     }
     if (state.selectedTorrent.has_value()) {
-        DrawTorrentPreview();
+        _DrawTorrentPreview();
     }
 
     ImGui::TextWrapped("Application average %.3f ms/frame (%.1f FPS)",
