@@ -62,7 +62,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DTEST_ONLY=True
+        -DGLFW_BUILD_WAYLAND:BOOL=OFF
         -S ${{ github.workspace }}
 
     - name: Build
@@ -73,8 +73,8 @@ jobs:
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run:   |
              if [ "$RUNNER_OS" == "Windows" ]; then
-                  ./tests/${{ matrix.build_type }}/bt_test
+                  ./bin/${{ matrix.build_type }}/bt_test
              else
-                  ./tests/bt_test
+                  ./bin/bt_test
              fi
       shell: bash
