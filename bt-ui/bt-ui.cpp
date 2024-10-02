@@ -4,6 +4,7 @@
 
 #include "GLFW/glfw3.h"
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include "nfd.hpp"
 #include "nfd_glfw3.h"
 #include "torrent_metadata.hpp"
@@ -34,10 +35,10 @@ static void _DisplayComments() {
     if (lines > 3) {
         ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, 80),
                           ImGuiChildFlags_None, 0);
-        ImGui::TextWrapped(torr.comment().value_or("").c_str());
+        ImGui::TextWrapped("%s", torr.comment().value_or("").c_str());
         ImGui::EndChild();
     } else {
-        ImGui::TextWrapped(torr.comment().value_or("").c_str());
+        ImGui::TextWrapped("%s", torr.comment().value_or("").c_str());
     }
 }
 
@@ -67,7 +68,7 @@ static void _DisplayFiles() {
                 ImGui::TableNextRow();
 
                 ImGui::TableSetColumnIndex(0);
-                ImGui::TextWrapped(torr.files()[row].GetRelativePathAsString().c_str());
+                ImGui::TextWrapped("%s", torr.files()[row].GetRelativePathAsString().c_str());
 
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("%.3f MB", torr.files()[row].size / float(1024 * 1024));
@@ -91,23 +92,23 @@ static void _DrawTorrentPreview() {
         {
             ImGui::Text("size");
             ImGui::SameLine(allignedStart);
-            ImGui::Text("%d MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
+            ImGui::Text("%lld MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
             ImGui::Separator();
 
             ImGui::Text("infoHash");
             ImGui::SameLine(allignedStart);
-            ImGui::Text(torr.infoHash().c_str());
+            ImGui::TextUnformatted(torr.infoHash().c_str());
             ImGui::Separator();
 
             // TODO: convert to readable date
             ImGui::Text("date");
             ImGui::SameLine(allignedStart);
-            ImGui::Text("%d", torr.creationDate().value_or(0));
+            ImGui::Text("%lld", torr.creationDate().value_or(0));
             ImGui::Separator();
 
             ImGui::Text("created by");
             ImGui::SameLine(allignedStart);
-            ImGui::Text(torr.createdBy().value_or("").c_str());
+            ImGui::TextUnformatted(torr.createdBy().value_or("").c_str());
             ImGui::Separator();
 
             _DisplayComments();
