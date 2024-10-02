@@ -2,8 +2,7 @@
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
-#include <stdio.h>
-
+#include "misc.hpp"
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -15,13 +14,13 @@ GLFWwindow* window = nullptr;
 // pointer to opensans font from memory
 extern const char* opensans_regular_font_compressed_data_base85;
 const char* mainFont = opensans_regular_font_compressed_data_base85;
-const float fontSize = 22;  // DO NOT CHANGE
+const float fontSize = 22; // DO NOT CHANGE
 
 void HandleShortcuts(int mods, int key);
 void DrawMainGui();
 
 static void glfw_error_callback(int error, const char* description) {
-    fprintf(stderr, "[Error]: GLFW Error %d: %s\n", error, description);
+    LogError("GLFW Error {}: {}", error, description);
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

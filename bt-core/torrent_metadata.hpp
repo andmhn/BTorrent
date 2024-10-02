@@ -19,7 +19,7 @@ class InvalidTorrentFile : public std::exception {
     }
 
   private:
-    std::string _err = "[Error]: Invalid Torrent File";
+    std::string _err = "Invalid Torrent File";
 };
 
 /**

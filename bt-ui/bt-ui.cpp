@@ -1,7 +1,7 @@
 #include <thread>
 #include <vector>
-#include <iostream>
 
+#include "misc.hpp"
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -33,7 +33,7 @@ static void _DisplayComments() {
 
     // if line greater than 3 enable scrolling
     if (lines > 3) {
-        ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x, 80),
+        ImGui::BeginChild("commentChild", ImVec2(ImGui::GetContentRegionAvail().x, 80),
                           ImGuiChildFlags_None, 0);
         ImGui::TextWrapped("%s", torr.comment().value_or("").c_str());
         ImGui::EndChild();
@@ -182,11 +182,11 @@ void DrawMainGui() {
 
 void HandleShortcuts(int mods, int key) {
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-        puts("[Info]: CTRL-O  Pressed!");
+        LogTrace("CTRL-O  Pressed!");
         SelectTorrentFile();
     }
     if (mods == GLFW_MOD_ALT && key == GLFW_KEY_F4) {
-        puts("[Info]: ALT-F4  Pressed! Exiting");
+        LogTrace("ALT-F4  Pressed! Exiting...");
         exit(0);
     }
 }
@@ -204,14 +204,18 @@ static void _SelectTorrentFile() {
     nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
 
     if (result == NFD_OKAY) {
-        printf("[Info]: Successfully selected file: %s\n", outPath);
-        state.selectedTorrent = bt::torrent_parser::ParseFromFile(outPath);
+        LogTrace("Successfully selected file: {}", outPath);
+        try {
+            state.selectedTorrent = bt::torrent_parser::ParseFromFile(outPath);
+        } catch (std::exception& e) {
+            LogError("{}  error: {}", outPath, e.what());
+        }
         NFD_FreePathU8(outPath);
 
     } else if (result == NFD_CANCEL) {
-        puts("[Info]: User pressed cancel.");
+        LogTrace("User pressed cancel.");
     } else {
-        fprintf(stderr, "[Error]: %s\n", NFD_GetError());
+        LogError(NFD_GetError());
     }
     NFD_Quit();
 }

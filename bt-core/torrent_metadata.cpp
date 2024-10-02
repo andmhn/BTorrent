@@ -1,7 +1,9 @@
 #include "torrent_metadata.hpp"
+#include "misc.hpp"
 
 #include <fstream>
 #include <sstream>
+#include <format>
 
 #include "external/bencode.hpp"
 #include "external/sha1.h"
@@ -110,7 +112,7 @@ TorrentMetadata ParseFromFile(std::string path) {
 
     std::ifstream torrentFile{path, std::ios::binary | std::ios::ate};
     if (!torrentFile.is_open()) {
-        throw std::runtime_error("Could not open file\n");
+        throw std::runtime_error("Could not open file");
     }
     torrentFile.seekg(0);
     std::string metaInfo((std::istreambuf_iterator<char>(torrentFile)),
@@ -185,7 +187,7 @@ std::optional<T> _GetDictValue(bencode::data dict, std::string key) {
     try {
         return std::get<T>(dict[key]);
     } catch (std::bad_variant_access) {
-        std::cerr << "[Info]: torrent file does not contain: " + key << "\n";
+        LogInfo("torrent file does not contain attribute: {}", key);
     }
     return {};
 }
