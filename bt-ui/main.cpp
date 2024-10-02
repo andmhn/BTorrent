@@ -39,7 +39,7 @@ int main(int, char**) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     // Create window with graphics context
-    window = glfwCreateWindow(1280, 720, "Bittorrent Client", nullptr, nullptr);
+    window = glfwCreateWindow(1280, 720, "BTorrent", nullptr, nullptr);
     glfwSetWindowSizeLimits(window, 800, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
     if (window == nullptr)
         return 1;
