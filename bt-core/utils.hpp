@@ -33,3 +33,14 @@ template <typename... Args>
 void LogTrace(std::string_view rt_fmt_str, Args &&...args) {
     Log(LOG_TRACE, std::vformat(rt_fmt_str, std::make_format_args(args...)));
 }
+
+namespace utils {
+std::string UnixTimeToUTC(long long unixTime);
+
+// converts bytes to human readable string
+// example: 
+//         24   -> 24 B
+//         1024 -> 1 KB
+//         1825 -> 1.78 KB
+std::string BytesToString(long long bytes);
+} // namespace utils

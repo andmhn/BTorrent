@@ -9,7 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SRCS 
 "main.cpp"
 "bt-ui.cpp"
-"opensans_font.cpp")
+"opensans_font.cpp"
+"assets/icon.cpp"
+)
 
 add_executable(${EXECUTABLE} ${SRCS})
 target_include_directories(${EXECUTABLE} PRIVATE "../bt-core")
@@ -49,6 +51,9 @@ target_include_directories(${EXECUTABLE} PRIVATE "${NFD_DIR}/src/include")
 # Platform specific
 #=====================================================
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  # set resource file
+  target_sources(${EXECUTABLE} PRIVATE assets/resources.rc)
+
   # enables hot reloading for debug
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")

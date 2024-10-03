@@ -1,7 +1,7 @@
 #include <thread>
 #include <vector>
 
-#include "misc.hpp"
+#include "utils.hpp"
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -19,14 +19,14 @@ static struct State {
 
 static void SelectTorrentFile();
 
-constexpr size_t allignedStart = 150;
+constexpr size_t allignedPos = 150;
 constexpr ImVec2 popupSize(800, 500);
 
 // wrap comment to scrollable
 static void _DisplayComments() {
     bt::TorrentMetadata& torr = state.selectedTorrent.value();
     ImGui::Text("comment");
-    ImGui::SameLine(allignedStart);
+    ImGui::SameLine(allignedPos);
 
     // calculate possible lines
     size_t lines = torr.comment().value_or("").size() / 80;
@@ -45,7 +45,7 @@ static void _DisplayComments() {
 static void _DisplayFiles() {
     bt::TorrentMetadata& torr = state.selectedTorrent.value();
     ImGui::Text("files");
-    ImGui::SameLine(allignedStart);
+    ImGui::SameLine(allignedPos);
 
     static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
                                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV;
@@ -71,7 +71,7 @@ static void _DisplayFiles() {
                 ImGui::TextWrapped("%s", torr.files()[row].GetRelativePathAsString().c_str());
 
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%.3f MB", torr.files()[row].size / float(1024 * 1024));
+                ImGui::TextUnformatted(utils::BytesToString(torr.files()[row].size).c_str());
             }
         }
         ImGui::EndTable();
@@ -91,23 +91,22 @@ static void _DrawTorrentPreview() {
     if (ImGui::BeginPopupModal(torr.name().c_str(), NULL, ImGuiWindowFlags_NoResize)) {
         {
             ImGui::Text("size");
-            ImGui::SameLine(allignedStart);
-            ImGui::Text("%lld MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
+            ImGui::SameLine(allignedPos);
+            ImGui::Text(utils::BytesToString(torr.piecesCount() * torr.pieceLength()).c_str());
             ImGui::Separator();
 
             ImGui::Text("infoHash");
-            ImGui::SameLine(allignedStart);
+            ImGui::SameLine(allignedPos);
             ImGui::TextUnformatted(torr.infoHash().c_str());
             ImGui::Separator();
-
-            // TODO: convert to readable date
+            
             ImGui::Text("date");
-            ImGui::SameLine(allignedStart);
-            ImGui::Text("%lld", torr.creationDate().value_or(0));
+            ImGui::SameLine(allignedPos);
+            ImGui::TextUnformatted(utils::UnixTimeToUTC(torr.creationDate().value_or(0)).c_str());
             ImGui::Separator();
 
             ImGui::Text("created by");
-            ImGui::SameLine(allignedStart);
+            ImGui::SameLine(allignedPos);
             ImGui::TextUnformatted(torr.createdBy().value_or("").c_str());
             ImGui::Separator();
 
@@ -180,9 +179,9 @@ void DrawMainGui() {
     ImGui::End();
 }
 
-void HandleShortcuts(int mods, int key) {
-    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-        LogTrace("CTRL-O  Pressed!");
+void HandleShortcuts(int mods, int key, int action) {
+    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O && action == GLFW_RELEASE) {
+        LogTrace("CTRL-O  Pressed and Released!");
         SelectTorrentFile();
     }
     if (mods == GLFW_MOD_ALT && key == GLFW_KEY_F4) {
@@ -192,6 +191,12 @@ void HandleShortcuts(int mods, int key) {
 }
 
 static void _SelectTorrentFile() {
+    // forbid re-selecting
+    if (state.selectedTorrent.has_value()) {
+        LogWarning("There's already a file selected. Skipping...");
+        return;
+    }
+
     NFD_Init();
     nfdu8char_t* outPath;
     nfdu8filteritem_t filters[1] = {{"Torrent File", "torrent"}};
