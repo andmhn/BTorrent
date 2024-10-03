@@ -192,6 +192,12 @@ void HandleShortcuts(int mods, int key) {
 }
 
 static void _SelectTorrentFile() {
+    // forbid re-selecting
+    if (state.selectedTorrent.has_value()) {
+        LogWarning("There's already a file selected. Skipping...");
+        return;
+    }
+
     NFD_Init();
     nfdu8char_t* outPath;
     nfdu8filteritem_t filters[1] = {{"Torrent File", "torrent"}};
