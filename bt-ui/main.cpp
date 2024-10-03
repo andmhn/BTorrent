@@ -16,7 +16,7 @@ extern const char* opensans_regular_font_compressed_data_base85;
 const char* mainFont = opensans_regular_font_compressed_data_base85;
 const float fontSize = 22; // DO NOT CHANGE
 
-void HandleShortcuts(int mods, int key);
+void HandleShortcuts(int mods, int key, int action);
 void DrawMainGui();
 
 static void glfw_error_callback(int error, const char* description) {
@@ -24,7 +24,7 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    HandleShortcuts(mods, key);
+    HandleShortcuts(mods, key, action);
 }
 
 int main(int, char**) {

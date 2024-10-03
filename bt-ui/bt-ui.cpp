@@ -180,9 +180,9 @@ void DrawMainGui() {
     ImGui::End();
 }
 
-void HandleShortcuts(int mods, int key) {
-    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-        LogTrace("CTRL-O  Pressed!");
+void HandleShortcuts(int mods, int key, int action) {
+    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O && action == GLFW_RELEASE) {
+        LogTrace("CTRL-O  Pressed and Released!");
         SelectTorrentFile();
     }
     if (mods == GLFW_MOD_ALT && key == GLFW_KEY_F4) {
