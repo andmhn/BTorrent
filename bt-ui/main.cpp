@@ -8,6 +8,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb_image.h"
+
 // expose our window
 GLFWwindow* window = nullptr;
 
@@ -15,6 +18,10 @@ GLFWwindow* window = nullptr;
 extern const char* opensans_regular_font_compressed_data_base85;
 const char* mainFont = opensans_regular_font_compressed_data_base85;
 const float fontSize = 22; // DO NOT CHANGE
+
+// raw icon data in memory
+extern unsigned char icon_32x32_png[];
+extern unsigned int icon_32x32_png_len;
 
 void HandleShortcuts(int mods, int key, int action);
 void DrawMainGui();
@@ -42,6 +49,19 @@ int main(int, char**) {
     glfwSetWindowSizeLimits(window, 800, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
     if (window == nullptr)
         return 1;
+
+    // setting up window icon for glfw
+    GLFWimage images[1];
+    unsigned char* logo = stbi_load_from_memory(icon_32x32_png, icon_32x32_png_len,
+                                                &images[0].width, &images[0].height, NULL, 4);
+    if (logo) {
+        images[0].pixels = logo;
+        glfwSetWindowIcon(window, 1, images);
+        stbi_image_free(images[0].pixels);
+    } else {
+        LogError("failed to load window logo from memory");
+    }
+
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, keyCallback);
     glfwSwapInterval(1); // Enable vsync

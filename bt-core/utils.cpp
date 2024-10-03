@@ -16,11 +16,10 @@ std::string UnixTimeToUTC(long long unixTime) {
     return std::format("{} UTC", std::chrono::sys_seconds{std::chrono::seconds(unixTime)});
 }
 
-
-constexpr long long KB = 1024;
-constexpr long long MB = 1024 * KB;
-constexpr long long GB = 1024 * MB;
-constexpr long long TB = 1024 * GB;
+static constexpr long long KB = 1024;
+static constexpr long long MB = 1024 * KB;
+static constexpr long long GB = 1024 * MB;
+static constexpr long long TB = 1024 * GB;
 
 static double _PreciseDivision(long long l, long long r) {
     long long precision = 100;
