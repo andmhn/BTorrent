@@ -4,7 +4,7 @@ set(SRCS
 "external/sha1.cpp"
 "torrent_metadata.cpp"
 "networking.cpp"
-"misc.cpp")
+"utils.cpp")
 
 
 set(ASIO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/asio/include)

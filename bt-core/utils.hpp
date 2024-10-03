@@ -33,3 +33,7 @@ template <typename... Args>
 void LogTrace(std::string_view rt_fmt_str, Args &&...args) {
     Log(LOG_TRACE, std::vformat(rt_fmt_str, std::make_format_args(args...)));
 }
+
+namespace utils {
+std::string UnixTimeToUTC(long long unixTime);
+}

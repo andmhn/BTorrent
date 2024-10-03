@@ -1,7 +1,7 @@
 #include <thread>
 #include <vector>
 
-#include "misc.hpp"
+#include "utils.hpp"
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -19,14 +19,14 @@ static struct State {
 
 static void SelectTorrentFile();
 
-constexpr size_t allignedStart = 150;
+constexpr size_t allignedPos = 150;
 constexpr ImVec2 popupSize(800, 500);
 
 // wrap comment to scrollable
 static void _DisplayComments() {
     bt::TorrentMetadata& torr = state.selectedTorrent.value();
     ImGui::Text("comment");
-    ImGui::SameLine(allignedStart);
+    ImGui::SameLine(allignedPos);
 
     // calculate possible lines
     size_t lines = torr.comment().value_or("").size() / 80;
@@ -45,7 +45,7 @@ static void _DisplayComments() {
 static void _DisplayFiles() {
     bt::TorrentMetadata& torr = state.selectedTorrent.value();
     ImGui::Text("files");
-    ImGui::SameLine(allignedStart);
+    ImGui::SameLine(allignedPos);
 
     static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
                                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV;
@@ -91,23 +91,22 @@ static void _DrawTorrentPreview() {
     if (ImGui::BeginPopupModal(torr.name().c_str(), NULL, ImGuiWindowFlags_NoResize)) {
         {
             ImGui::Text("size");
-            ImGui::SameLine(allignedStart);
+            ImGui::SameLine(allignedPos);
             ImGui::Text("%lld MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
             ImGui::Separator();
 
             ImGui::Text("infoHash");
-            ImGui::SameLine(allignedStart);
+            ImGui::SameLine(allignedPos);
             ImGui::TextUnformatted(torr.infoHash().c_str());
             ImGui::Separator();
-
-            // TODO: convert to readable date
+            
             ImGui::Text("date");
-            ImGui::SameLine(allignedStart);
-            ImGui::Text("%lld", torr.creationDate().value_or(0));
+            ImGui::SameLine(allignedPos);
+            ImGui::TextUnformatted(utils::UnixTimeToUTC(torr.creationDate().value_or(0)).c_str());
             ImGui::Separator();
 
             ImGui::Text("created by");
-            ImGui::SameLine(allignedStart);
+            ImGui::SameLine(allignedPos);
             ImGui::TextUnformatted(torr.createdBy().value_or("").c_str());
             ImGui::Separator();
 
