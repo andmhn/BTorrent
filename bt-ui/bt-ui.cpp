@@ -71,7 +71,7 @@ static void _DisplayFiles() {
                 ImGui::TextWrapped("%s", torr.files()[row].GetRelativePathAsString().c_str());
 
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%.3f MB", torr.files()[row].size / float(1024 * 1024));
+                ImGui::TextUnformatted(utils::BytesToString(torr.files()[row].size).c_str());
             }
         }
         ImGui::EndTable();
@@ -92,7 +92,7 @@ static void _DrawTorrentPreview() {
         {
             ImGui::Text("size");
             ImGui::SameLine(allignedPos);
-            ImGui::Text("%lld MB", (torr.piecesCount() * torr.pieceLength()) / (1024 * 1024));
+            ImGui::Text(utils::BytesToString(torr.piecesCount() * torr.pieceLength()).c_str());
             ImGui::Separator();
 
             ImGui::Text("infoHash");
